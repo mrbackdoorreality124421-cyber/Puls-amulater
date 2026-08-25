@@ -10,7 +10,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 120  # Extended for native compilation
+    timeout-minutes: 120
     
     steps:
       - uses: actions/checkout@v4
@@ -39,7 +39,10 @@ jobs:
             libglib2.0-dev \
             libpixman-1-dev \
             libpng-dev \
-            zlib1g-dev
+            zlib1g-dev \
+            libasound2-dev \
+            libpulse-dev \
+            libepoxy-dev
 
       - name: Download QEMU source
         run: |
@@ -47,7 +50,7 @@ jobs:
           tar -xf qemu-8.2.0.tar.xz
           mv qemu-8.2.0 qemu-src
 
-      - name: Configure QEMU
+      - name: Configure QEMU (minimal build)
         run: |
           cd qemu-src
           ./configure \
@@ -55,20 +58,66 @@ jobs:
             --disable-werror \
             --disable-docs \
             --disable-linux-user \
-            --disable-system \
             --enable-system \
             --disable-user \
             --disable-gtk \
             --disable-sdl \
             --disable-vnc \
-            --audio-drv-list=alsa,oss \
+            --disable-spice \
+            --disable-virglrenderer \
+            --disable-libusb \
+            --disable-usb-redir \
+            --disable-smartcard \
+            --disable-guest-agent \
+            --disable-cap-ng \
+            --disable-vhost-kernel \
+            --disable-vhost-net \
+            --disable-vhost-crypto \
+            --disable-vhost-scsi \
+            --disable-vhost-vsock \
+            --disable-vhost-user \
+            --disable-tpm \
+            --disable-seccomp \
+            --disable-coroutine-pool \
+            --disable-glusterfs \
+            --disable-libnfs \
+            --disable-libiscsi \
+            --disable-libssh \
+            --disable-bzip2 \
+            --disable-lzo \
+            --disable-snappy \
+            --disable-lzfse \
+            --disable-xen \
+            --disable-xen-pci-passthrough \
+            --disable-curl \
+            --disable-brlapi \
+            --disable-curses \
+            --disable-iconv \
+            --disable-rdma \
+            --disable-pvrdma \
+            --disable-vde \
+            --disable-netmap \
+            --disable-linux-aio \
+            --disable-linux-io-uring \
+            --disable-capstone \
+            --disable-gcrypt \
+            --disable-nettle \
+            --disable-gnutls \
+            --disable-keyring \
+            --disable-avx2 \
+            --disable-avx512f \
+            --disable-replication \
+            --disable-opengl \
+            --disable-virtfs \
+            --disable-xen \
+            --audio-drv-list=oss \
             --prefix=/usr/local
 
       - name: Build QEMU
         run: |
           cd qemu-src
           make -j$(nproc)
-          make install
+          sudo make install
 
       - name: Build APK
         run: |
