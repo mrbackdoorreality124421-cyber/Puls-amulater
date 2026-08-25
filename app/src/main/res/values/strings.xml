@@ -1,0 +1,37 @@
+<resources>
+    <string name="app_name">PulsePC</string>
+    <string name="add_pc_game">Add PC Game</string>
+    <string name="drag_drop_hint">Select ZIP archive, installer or game folder</string>
+    <string name="game_library">PC Game Library</string>
+    <string name="recently_played">Recently Played</string>
+    <string name="all_games">Installed Games</string>
+    <string name="no_games_yet">No PC games added yet</string>
+    <string name="no_games_subtitle">Import a PC game ZIP to automatically analyze, optimize, and generate mobile touch controls.</string>
+    <string name="sample_game_button">Load Demo Game (DirectX 9 / Indie)</string>
+    
+    <!-- Analyzer strings -->
+    <string name="scanning_game">Scanning Archive…</string>
+    <string name="analyzing_architecture">Analyzing Engine &amp; Dependencies…</string>
+    <string name="optimizing_pipeline">Applying Rendering &amp; Shaders…</string>
+    <string name="generating_controls">Synthesizing Adaptive Controls…</string>
+    
+    <!-- Profiles -->
+    <string name="profile_super_smooth">Super Smooth</string>
+    <string name="profile_smooth">Smooth</string>
+    <string name="profile_balance">Balance</string>
+    <string name="profile_high">High</string>
+    <string name="profile_ultra">Ultra</string>
+    <string name="profile_extreme">Extreme</string>
+    <string name="profile_super_extreme">Super Extreme</string>
+    
+    <!-- Actions -->
+    <string name="play">PLAY</string>
+    <string name="settings">SETTINGS</string>
+    <string name="customize_controls">CUSTOMIZE CONTROLS</string>
+    <string name="apply_recommended">APPLY RECOMMENDED</string>
+    <string name="free_space">FREE SPACE</string>
+    <string name="cancel">CANCEL</string>
+    <string name="safe_mode">SAFE MODE</string>
+    <string name="clear_cache">CLEAR SHADER &amp; OPTIMIZATION CACHE</string>
+    <string name="restore_backup">RESTORE ORIGINAL CONFIG</string>
+</resources>
