@@ -1,0 +1,77 @@
+name: Build Emulator
+
+on:
+  push:
+    branches: [ main, agent/real-emulator ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install NDK
+        run: |
+          sdkmanager "ndk;25.2.9519653"
+          echo "ANDROID_NDK_HOME=$ANDROID_SDK_ROOT/ndk/25.2.9519653" >> $GITHUB_ENV
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            ninja-build \
+            cmake \
+            pkg-config \
+            libglib2.0-dev \
+            libpixman-1-dev \
+            libpng-dev \
+            zlib1g-dev
+
+      - name: Download QEMU source
+        run: |
+          wget https://download.qemu.org/qemu-8.2.0.tar.xz
+          tar -xf qemu-8.2.0.tar.xz
+          mv qemu-8.2.0 qemu-src
+
+      - name: Configure QEMU (minimal build)
+        run: |
+          cd qemu-src
+          ./configure \
+            --target-list=i386-softmmu \
+            --disable-werror \
+            --disable-docs \
+            --disable-gtk \
+            --disable-sdl \
+            --disable-vnc \
+            --prefix=/usr/local
+
+      - name: Build QEMU
+        run: |
+          cd qemu-src
+          make -j$(nproc)
+          sudo make install
+
+      - name: Build APK
+        run: |
+          ./gradlew assembleDebug --no-daemon \
+            -Dorg.gradle.jvmargs="-Xmx4096m"
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: pulse-emulator-apk
+          path: app/build/outputs/apk/debug/app-debug.apk
