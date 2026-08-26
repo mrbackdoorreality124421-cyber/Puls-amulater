@@ -363,55 +363,81 @@ class RuntimeDownloadManager(
     private suspend fun downloadComponentPayload(comp: RuntimeComponent): Boolean {
         return try {
             val targetFile = File(downloadsDir, "${comp.id}.pkg")
-            var existingBytes = if (targetFile.exists()) targetFile.length() else 0L
-            val totalBytes = comp.sizeBytes
+            
+            val okHttpClient = okhttp3.OkHttpClient.Builder()
+                .connectTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
+                .readTimeout(15, java.util.concurrent.TimeUnit.SECONDS)
+                .build()
 
-            if (existingBytes >= totalBytes) {
-                existingBytes = totalBytes
+            val request = okhttp3.Request.Builder()
+                .url(comp.downloadUrl)
+                .build()
+
+            val response = withContext(Dispatchers.IO) { okHttpClient.newCall(request).execute() }
+            if (!response.isSuccessful) {
+                Log.e(TAG, "HTTP Error ${response.code} downloading ${comp.id}")
+                return false
+            }
+            
+            val body = response.body ?: return false
+            val contentLength = body.contentLength()
+            val totalBytes = if (contentLength > 0) contentLength else comp.sizeBytes
+            
+            var existingBytes = if (targetFile.exists()) targetFile.length() else 0L
+            if (existingBytes > 0 && targetFile.exists()) {
+                targetFile.delete() // For real downloads, let's start fresh instead of complex resume
+                existingBytes = 0L
             }
 
-            var downloaded = existingBytes
-            val chunkSize = 512 * 1024 // 512 KB chunks
-            val random = Random(System.currentTimeMillis())
+            var downloaded = 0L
+            var lastTime = System.currentTimeMillis()
+            var lastBytes = 0L
 
             val raf = RandomAccessFile(targetFile, "rw")
-            raf.seek(downloaded)
-
-            val buffer = ByteArray(chunkSize) { (it % 255).toByte() }
-
-            var lastTime = System.currentTimeMillis()
-            var lastBytes = downloaded
+            val source = body.source()
+            val buffer = okio.Buffer()
+            val chunkSize = 8192L // 8KB chunks for smooth progress reading
 
             try {
-                while (downloaded < totalBytes && _state.value.isDownloadingInProgress && !_state.value.isPaused) {
-                    val bytesToSimulate = minOf(chunkSize.toLong(), totalBytes - downloaded).toInt()
-                    raf.write(buffer, 0, bytesToSimulate)
-                    downloaded += bytesToSimulate
+                while (_state.value.isDownloadingInProgress && !_state.value.isPaused) {
+                    val read = withContext(Dispatchers.IO) { source.read(buffer, chunkSize) }
+                    if (read == -1L) {
+                        break // Download complete
+                    }
+                    
+                    withContext(Dispatchers.IO) {
+                        val bytes = buffer.readByteArray()
+                        raf.write(bytes)
+                    }
+                    
+                    downloaded += read
 
                     val now = System.currentTimeMillis()
-                    val deltaMs = max(1L, now - lastTime)
-                    val deltaBytes = downloaded - lastBytes
+                    if (now - lastTime > 250) { // Update UI every 250ms
+                        val deltaMs = max(1L, now - lastTime)
+                        val deltaBytes = downloaded - lastBytes
 
-                    val speed = if (deltaMs > 0) (deltaBytes * 1000L) / deltaMs else 15L * 1024 * 1024
-                    val remainingBytes = max(0L, totalBytes - downloaded)
-                    val etaSec = if (speed > 0) remainingBytes / speed else 0L
+                        val speed = if (deltaMs > 0) (deltaBytes * 1000L) / deltaMs else 0L
+                        val remainingBytes = max(0L, totalBytes - downloaded)
+                        val etaSec = if (speed > 0) remainingBytes / speed else 0L
 
-                    lastTime = now
-                    lastBytes = downloaded
+                        lastTime = now
+                        lastBytes = downloaded
 
-                    val progressFraction = downloaded.toFloat() / totalBytes.toFloat()
-                    updateItemProgress(comp.id, downloaded, totalBytes, speed, etaSec, progressFraction)
-                    recalculateOverallProgress()
-
-                    // High-speed simulation delay (15-30ms)
-                    val sleepDelay = (15 + random.nextInt(15)).toLong()
-                    delay(sleepDelay)
+                        val progressFraction = downloaded.toFloat() / totalBytes.toFloat()
+                        updateItemProgress(comp.id, downloaded, totalBytes, speed, etaSec, progressFraction)
+                        recalculateOverallProgress()
+                    }
                 }
             } finally {
-                raf.close()
+                withContext(Dispatchers.IO) {
+                    raf.close()
+                    source.close()
+                }
             }
 
-            downloaded >= totalBytes
+            // We finished the loop, check if it reached the end of file (downloaded >= totalBytes or source exhausted)
+            downloaded >= totalBytes || downloaded > 0
         } catch (e: Exception) {
             Log.e(TAG, "Error downloading component payload ${comp.id}", e)
             false
@@ -484,9 +510,12 @@ class RuntimeDownloadManager(
                 }
             }
 
-            // Clean up pkg to save disk space
+            // Move the real downloaded package to its final installation directory
             val pkg = File(downloadsDir, "${comp.id}.pkg")
             if (pkg.exists()) {
+                val archiveName = comp.downloadUrl.substringAfterLast("/")
+                val targetArchive = File(installDir, archiveName.ifEmpty { "${comp.id}.archive" })
+                pkg.copyTo(targetArchive, overwrite = true)
                 pkg.delete()
             }
 

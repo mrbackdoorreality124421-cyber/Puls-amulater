@@ -51,7 +51,8 @@ data class RuntimeComponent(
     val minRamGb: Float = 3.0f,
     val requiresVulkan: Boolean = false,
     val requiresVulkan13: Boolean = false,
-    val gpuSpecificVendor: String? = null // e.g. "Qualcomm", "ARM", null for universal
+    val gpuSpecificVendor: String? = null, // e.g. "Qualcomm", "ARM", null for universal
+    val downloadUrl: String = ""
 )
 
 data class ComponentDownloadItem(

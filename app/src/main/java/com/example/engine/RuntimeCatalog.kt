@@ -22,7 +22,8 @@ object RuntimeCatalog {
             formattedSize = "148 MB",
             sha256Checksum = "9e2c65a83b9c47e8412e8790b4142f1f3a8b27c65d9e018a2bc491f2b604e0a1",
             targetSubdir = "Wine/wine-9.2",
-            description = "Provides complete Win32/Win64 API compatibility layer, isolated prefix sandbox, and core DLL hooks."
+            description = "Provides complete Win32/Win64 API compatibility layer, isolated prefix sandbox, and core DLL hooks.",
+            downloadUrl = "https://github.com/Kron4ek/Wine-Builds/releases/download/9.0/wine-9.0-amd64.tar.xz"
         ),
         RuntimeComponent(
             id = "box64_runtime",
@@ -35,7 +36,8 @@ object RuntimeCatalog {
             sha256Checksum = "e5b81a7d609214ef5e9821a4f913d077c5b6a71e2c94318fb4a1e948a31e8c90",
             targetSubdir = "Box64/v0.2.8",
             description = "High-performance dynamic recompiler translating x86_64 CPU instructions to native ARM64 with vectorized extensions.",
-            requiredForArch = listOf("arm64-v8a", "universal")
+            requiredForArch = listOf("arm64-v8a", "universal"),
+            downloadUrl = "https://github.com/ptitSeb/box64/archive/refs/tags/v0.2.8.tar.gz"
         ),
         RuntimeComponent(
             id = "box86_runtime",
@@ -48,7 +50,8 @@ object RuntimeCatalog {
             sha256Checksum = "7b2c918a3e9c47e8412e8790b4142f1f3a8b27c65d9e018a2bc491f2b604e03b",
             targetSubdir = "Box86/v0.3.2",
             description = "Translates 32-bit x86 games and legacy launchers with custom dynarec opcode optimizations.",
-            dependencies = listOf("wine_runtime_core")
+            dependencies = listOf("wine_runtime_core"),
+            downloadUrl = "https://github.com/ptitSeb/box86/archive/refs/tags/v0.3.2.tar.gz"
         ),
         RuntimeComponent(
             id = "dxvk_vulkan",
@@ -61,7 +64,8 @@ object RuntimeCatalog {
             sha256Checksum = "3a8c1f92e0714b6e5b8821a4f913d077c5b6a71e2c94318fb4a1e948a31e8d44",
             targetSubdir = "DXVK/v2.3.1",
             description = "Vulkan-based translation layer for D3D9, D3D10, and D3D11 with asynchronous pipeline compilation.",
-            requiresVulkan = true
+            requiresVulkan = true,
+            downloadUrl = "https://github.com/doitsujin/dxvk/releases/download/v2.3.1/dxvk-2.3.1.tar.gz"
         ),
         RuntimeComponent(
             id = "vkd3d_proton",
@@ -76,7 +80,8 @@ object RuntimeCatalog {
             description = "Direct3D 12 to Vulkan translation layer enabling DirectX 12 games with root signature caching.",
             requiresVulkan = true,
             requiresVulkan13 = true,
-            dependencies = listOf("dxvk_vulkan")
+            dependencies = listOf("dxvk_vulkan"),
+            downloadUrl = "https://github.com/HansKristian-Work/vkd3d-proton/releases/download/v2.11.1/vkd3d-proton-2.11.1.tar.zst"
         ),
         RuntimeComponent(
             id = "graphics_driver_support",
@@ -88,7 +93,8 @@ object RuntimeCatalog {
             formattedSize = "42 MB",
             sha256Checksum = "5d1f81a7d609214ef5e9821a4f913d077c5b6a71e2c94318fb4a1e948a31e8f66",
             targetSubdir = "Graphics/drivers",
-            description = "Hardware-optimized driver dispatch layer with Qualcomm Turnip & ARM Mali low-overhead configurations."
+            description = "Hardware-optimized driver dispatch layer with Qualcomm Turnip & ARM Mali low-overhead configurations.",
+            downloadUrl = "https://github.com/K11MCH1/AdrenoToolsDrivers/releases/download/v840/Qualcomm_840_adpkg.zip"
         ),
         RuntimeComponent(
             id = "input_controller_layer",
@@ -100,7 +106,8 @@ object RuntimeCatalog {
             formattedSize = "12 MB",
             sha256Checksum = "6e2a81a7d609214ef5e9821a4f913d077c5b6a71e2c94318fb4a1e948a31e8a77",
             targetSubdir = "Input/bridge",
-            description = "Zero-latency DirectInput, XInput 1.4, virtual mouse touchpad, and multi-touch controller bridge."
+            description = "Zero-latency DirectInput, XInput 1.4, virtual mouse touchpad, and multi-touch controller bridge.",
+            downloadUrl = "https://github.com/libsdl-org/SDL/releases/download/release-2.30.2/SDL2-2.30.2.tar.gz"
         ),
         RuntimeComponent(
             id = "runtime_libraries",
@@ -113,7 +120,8 @@ object RuntimeCatalog {
             sha256Checksum = "7f3b81a7d609214ef5e9821a4f913d077c5b6a71e2c94318fb4a1e948a31e8b88",
             targetSubdir = "Libraries/redist",
             description = "Microsoft Visual C++ (2015-2022), OpenAL 1.1, FAudio, dsound, and Windows Media codec redistributables.",
-            dependencies = listOf("wine_runtime_core")
+            dependencies = listOf("wine_runtime_core"),
+            downloadUrl = "https://github.com/abbodi1406/vcredist/releases/download/v0.79.0/VisualCppRedist_AIO_x86_x64_79.zip"
         ),
         RuntimeComponent(
             id = "shader_infrastructure",
@@ -125,7 +133,8 @@ object RuntimeCatalog {
             formattedSize = "16 MB",
             sha256Checksum = "8a4c81a7d609214ef5e9821a4f913d077c5b6a71e2c94318fb4a1e948a31e8c99",
             targetSubdir = "Shaders/cache_engine",
-            description = "Pre-compiled SPIR-V shader cache, async shader compilation manager, and stutter-elimination cache."
+            description = "Pre-compiled SPIR-V shader cache, async shader compilation manager, and stutter-elimination cache.",
+            downloadUrl = "https://github.com/KhronosGroup/glslang/releases/download/master-tot/glslang-master-linux-Release.zip"
         ),
         RuntimeComponent(
             id = "fonts_compatibility_data",
@@ -137,7 +146,8 @@ object RuntimeCatalog {
             formattedSize = "22 MB",
             sha256Checksum = "9b5d81a7d609214ef5e9821a4f913d077c5b6a71e2c94318fb4a1e948a31e8d00",
             targetSubdir = "Fonts/system",
-            description = "DirectWrite compatible TrueType fonts (Arial, Tahoma, Consolas, Segoe UI) and system registry entries."
+            description = "DirectWrite compatible TrueType fonts (Arial, Tahoma, Consolas, Segoe UI) and system registry entries.",
+            downloadUrl = "https://github.com/JetBrains/JetBrainsMono/releases/download/v2.304/JetBrainsMono-2.304.zip"
         )
     )
 

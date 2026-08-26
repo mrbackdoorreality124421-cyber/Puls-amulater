@@ -107,11 +107,13 @@ fun GameRuntimeScreen(
     }
 
     val infiniteTransition = rememberInfiniteTransition(label = "game_render")
+    // Map FPS to animation speed multiplier for crazy performance visual feel
+    val fpsSpeedFactor = if (telemetry.fps > 90f) 2.5f else if (telemetry.fps > 60f) 1.5f else 1.0f
     val roadOffset by infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = 1f,
         animationSpec = infiniteRepeatable(
-            animation = tween((700 / speedMultiplier.coerceAtLeast(0.5f)).toInt(), easing = LinearEasing)
+            animation = tween((700 / (speedMultiplier * fpsSpeedFactor).coerceAtLeast(0.5f)).toInt(), easing = LinearEasing)
         ),
         label = "road_anim"
     )
@@ -183,6 +185,26 @@ fun GameRuntimeScreen(
             val carX = roadLeftBot + (carPositionX * (roadRightBot - roadLeftBot - 80.dp.toPx()))
             val carY = h - 110.dp.toPx()
 
+            // Exhaust Boost Effect
+            if (speedMultiplier > 1.0f) {
+                val particleCount = if (speedMultiplier > 2.0f) 8 else 4
+                for (i in 0..particleCount) {
+                    val boostOffset = (roadOffset * 10f + (i * 0.5f)) % 1f
+                    val sizeFactor = if (speedMultiplier > 2.0f) 1.5f else 1.0f
+                    
+                    drawCircle(
+                        color = NeonCyan.copy(alpha = 1f - boostOffset),
+                        radius = (12.dp.toPx() * sizeFactor) * (1f - boostOffset),
+                        center = Offset(carX + 15.dp.toPx(), carY + 45.dp.toPx() + (boostOffset * 100.dp.toPx()))
+                    )
+                    drawCircle(
+                        color = NeonCyan.copy(alpha = 1f - boostOffset),
+                        radius = (12.dp.toPx() * sizeFactor) * (1f - boostOffset),
+                        center = Offset(carX + 55.dp.toPx(), carY + 45.dp.toPx() + (boostOffset * 100.dp.toPx()))
+                    )
+                }
+            }
+
             drawRoundRect(
                 brush = Brush.horizontalGradient(listOf(NeonPurple, NeonCyan)),
                 topLeft = Offset(carX, carY),
@@ -195,14 +217,16 @@ fun GameRuntimeScreen(
         TouchControlOverlay(
             layout = controlLayout,
             onInputTriggered = { key, isDown ->
+                val movementSpeed = if (telemetry.fps > 90f) 0.15f else 0.08f // Super snappy controls at high FPS
                 if (key.contains("A") || key.contains("LEFT")) {
-                    if (isDown) carPositionX = (carPositionX - 0.08f).coerceAtLeast(0.1f)
+                    if (isDown) carPositionX = (carPositionX - movementSpeed).coerceAtLeast(0.1f)
                 }
                 if (key.contains("D") || key.contains("RIGHT")) {
-                    if (isDown) carPositionX = (carPositionX + 0.08f).coerceAtMost(0.9f)
+                    if (isDown) carPositionX = (carPositionX + movementSpeed).coerceAtMost(0.9f)
                 }
                 if (key.contains("W") || key.contains("SPACE") || key.contains("LCLICK")) {
-                    speedMultiplier = if (isDown) 1.8f else 1.0f
+                    val targetBoost = if (telemetry.frameGenActive) 3.5f else 1.8f
+                    speedMultiplier = if (isDown) targetBoost else 1.0f
                 }
                 if (key.contains("S") || key.contains("BRAKE")) {
                     speedMultiplier = if (isDown) 0.4f else 1.0f

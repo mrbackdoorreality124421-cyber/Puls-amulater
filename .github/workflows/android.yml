@@ -1,0 +1,55 @@
+name: Android CI
+
+on:
+  push:
+    branches: [ "main", "master" ]
+  pull_request:
+    branches: [ "main", "master" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: gradle
+
+    - name: Grant execute permission for gradlew
+      run: chmod +x gradlew
+      continue-on-error: true
+
+    - name: Create local.properties
+      run: echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
+
+    - name: Build Debug APK
+      run: ./gradlew assembleDebug --stacktrace
+
+    - name: Build Release Bundle (AAB)
+      # You need to configure KEYSTORE_PATH, STORE_PASSWORD, KEY_PASSWORD in GitHub Secrets
+      # If they are missing, this step might fail or use the fallback key if one is committed (not recommended for production).
+      run: ./gradlew bundleRelease --stacktrace
+      env:
+        KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+        KEYSTORE_PATH: ${{ secrets.KEYSTORE_PATH }}
+      continue-on-error: true
+
+    - name: Upload Debug APK
+      uses: actions/upload-artifact@v4
+      with:
+        name: debug-apk
+        path: app/build/outputs/apk/debug/app-debug.apk
+
+    - name: Upload Release AAB
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: release-aab
+        path: app/build/outputs/bundle/release/app-release.aab

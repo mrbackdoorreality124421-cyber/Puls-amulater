@@ -97,6 +97,7 @@ fun TouchControlOverlay(
             when (elem.type) {
                 ControlElementType.JOYSTICK_LEFT, ControlElementType.JOYSTICK_RIGHT -> {
                     var stickOffset by remember { mutableStateOf(Offset.Zero) }
+                    var activeKeys by remember { mutableStateOf(setOf<String>()) }
 
                     Box(
                         modifier = Modifier
@@ -124,11 +125,13 @@ fun TouchControlOverlay(
                                         onDragStart = { triggerHaptic() },
                                         onDragEnd = {
                                             stickOffset = Offset.Zero
-                                            onInputTriggered?.invoke(elem.mappedKey, false)
+                                            activeKeys.forEach { onInputTriggered?.invoke(it, false) }
+                                            activeKeys = emptySet()
                                         },
                                         onDragCancel = {
                                             stickOffset = Offset.Zero
-                                            onInputTriggered?.invoke(elem.mappedKey, false)
+                                            activeKeys.forEach { onInputTriggered?.invoke(it, false) }
+                                            activeKeys = emptySet()
                                         },
                                         onDrag = { change, dragAmount ->
                                             change.consume()
@@ -141,7 +144,19 @@ fun TouchControlOverlay(
                                             } else {
                                                 newPos
                                             }
-                                            onInputTriggered?.invoke(elem.mappedKey, true)
+                                            
+                                            val newKeys = mutableSetOf<String>()
+                                            if (stickOffset.x < -15) newKeys.add("LEFT_A")
+                                            if (stickOffset.x > 15) newKeys.add("RIGHT_D")
+                                            if (stickOffset.y < -15) newKeys.add("UP_W")
+                                            if (stickOffset.y > 15) newKeys.add("DOWN_S")
+                                            
+                                            val released = activeKeys - newKeys
+                                            val pressed = newKeys - activeKeys
+                                            
+                                            released.forEach { onInputTriggered?.invoke(it, false) }
+                                            pressed.forEach { onInputTriggered?.invoke(it, true) }
+                                            activeKeys = newKeys
                                         }
                                     )
                                 }
@@ -190,6 +205,37 @@ fun TouchControlOverlay(
                                             val newX = ((elem.xPercent * widthPx) + dragAmount.x) / widthPx
                                             val newY = ((elem.yPercent * heightPx) + dragAmount.y) / heightPx
                                             onElementMoved?.invoke(elem.id, newX.coerceIn(0.05f, 0.95f), newY.coerceIn(0.05f, 0.95f))
+                                        }
+                                    )
+                                } else {
+                                    var activeKeys = setOf<String>()
+                                    var currentOffset = Offset.Zero
+                                    
+                                    detectDragGestures(
+                                        onDragStart = { triggerHaptic() },
+                                        onDragEnd = {
+                                            activeKeys.forEach { onInputTriggered?.invoke(it, false) }
+                                        },
+                                        onDragCancel = {
+                                            activeKeys.forEach { onInputTriggered?.invoke(it, false) }
+                                        },
+                                        onDrag = { change, dragAmount ->
+                                            change.consume()
+                                            currentOffset += dragAmount
+                                            
+                                            // Simple threshold
+                                            val newKeys = mutableSetOf<String>()
+                                            if (currentOffset.x < -20) newKeys.add("LEFT_A")
+                                            if (currentOffset.x > 20) newKeys.add("RIGHT_D")
+                                            if (currentOffset.y < -20) newKeys.add("UP_W")
+                                            if (currentOffset.y > 20) newKeys.add("DOWN_S")
+                                            
+                                            val released = activeKeys - newKeys
+                                            val pressed = newKeys - activeKeys
+                                            
+                                            released.forEach { onInputTriggered?.invoke(it, false) }
+                                            pressed.forEach { onInputTriggered?.invoke(it, true) }
+                                            activeKeys = newKeys
                                         }
                                     )
                                 }

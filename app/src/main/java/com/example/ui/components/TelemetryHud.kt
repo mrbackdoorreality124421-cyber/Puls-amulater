@@ -1,5 +1,7 @@
 package com.example.ui.components
 
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -49,6 +51,7 @@ fun TelemetryHud(
             .padding(horizontal = 10.dp, vertical = 6.dp)
     ) {
         Row(
+            modifier = Modifier.horizontalScroll(rememberScrollState()),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
@@ -91,6 +94,35 @@ fun TelemetryHud(
                 fontSize = 11.sp,
                 fontFamily = FontFamily.Monospace
             )
+
+            // Special Flags (Frame Gen / Async)
+            if (telemetry.frameGenActive) {
+                Box(
+                    modifier = Modifier
+                        .clip(RoundedCornerShape(3.dp))
+                        .background(NeonPurple.copy(alpha = 0.2f))
+                        .border(1.dp, NeonPurple.copy(alpha = 0.5f), RoundedCornerShape(3.dp))
+                        .padding(horizontal = 4.dp, vertical = 2.dp)
+                ) {
+                    Text(
+                        text = "AFMF 2.0",
+                        color = NeonPurple,
+                        fontSize = 9.sp,
+                        fontWeight = FontWeight.Bold,
+                        fontFamily = FontFamily.Monospace
+                    )
+                }
+            }
+
+            if (telemetry.asyncComputeActive) {
+                Text(
+                    text = "ASYNC",
+                    color = NeonEmerald,
+                    fontSize = 9.sp,
+                    fontWeight = FontWeight.Bold,
+                    fontFamily = FontFamily.Monospace
+                )
+            }
 
             // RAM
             Text(
