@@ -29,6 +29,9 @@ jobs:
     - name: Create local.properties
       run: echo "sdk.dir=$ANDROID_SDK_ROOT" > local.properties
 
+    - name: Decode Keystore
+      run: base64 -d debug.keystore.base64 > debug.keystore
+
     - name: Build Debug APK
       run: gradle assembleDebug --stacktrace
 
